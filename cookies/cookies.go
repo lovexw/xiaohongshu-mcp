@@ -21,10 +21,6 @@ func NewLoadCookie(path string) Cookier {
 		panic("path is required")
 	}
 
-	if err := os.MkdirAll(filepath.Dir(path), 0644); err != nil {
-		panic(err)
-	}
-
 	return &localCookie{
 		path: path,
 	}
@@ -47,8 +43,24 @@ func (c *localCookie) SaveCookies(data []byte) error {
 }
 
 // GetCookiesFilePath 获取 cookies 文件路径。
+// 为了向后兼容，如果旧路径 /tmp/cookies.json 存在，则继续使用；
+// 否则使用当前目录下的 cookies.json
 func GetCookiesFilePath() string {
+	// 旧路径：/tmp/cookies.json
 	tmpDir := os.TempDir()
-	filePath := filepath.Join(tmpDir, "cookies.json")
-	return filePath
+	oldPath := filepath.Join(tmpDir, "cookies.json")
+
+	// 检查旧路径文件是否存在
+	if _, err := os.Stat(oldPath); err == nil {
+		// 文件存在，使用旧路径（向后兼容）
+		return oldPath
+	}
+
+	path := os.Getenv("COOKIES_PATH") // 判断环境变量
+	if path == "" {
+		path = "cookies.json" // fallback，本地调试时用当前目录
+	}
+
+	// 文件不存在，使用新路径（当前目录）
+	return path
 }

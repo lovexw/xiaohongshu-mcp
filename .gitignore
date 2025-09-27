@@ -8,6 +8,8 @@
 *.so
 *.dylib
 
+.idea
+
 # Test binary, built with `go test -c`
 *.test
 
@@ -37,3 +39,6 @@ xiaohongshu-mcp
 
 # Test scripts
 test_*.sh
+
+# Cookies files (contain sensitive login information)
+cookies.json

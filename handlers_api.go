@@ -48,6 +48,19 @@ func (s *AppServer) checkLoginStatusHandler(c *gin.Context) {
 	respondSuccess(c, status, "检查登录状态成功")
 }
 
+// getLoginQrcodeHandler 处理 [GET /api/login/qrcode] 请求。
+// 用于生成并返回登录二维码（Base64 图片 + 超时时间），供前端展示给用户扫码登录。
+func (s *AppServer) getLoginQrcodeHandler(c *gin.Context) {
+	result, err := s.xiaohongshuService.GetLoginQrcode(c.Request.Context())
+	if err != nil {
+		respondError(c, http.StatusInternalServerError, "STATUS_CHECK_FAILED",
+			"获取登录二维码失败", err.Error())
+		return
+	}
+
+	respondSuccess(c, result, "获取登录二维码成功")
+}
+
 // publishHandler 发布内容
 func (s *AppServer) publishHandler(c *gin.Context) {
 	var req PublishRequest
@@ -122,6 +135,27 @@ func (s *AppServer) getFeedDetailHandler(c *gin.Context) {
 
 	c.Set("account", "ai-report")
 	respondSuccess(c, result, "获取Feed详情成功")
+}
+
+// userProfileHandler 用户主页
+func (s *AppServer) userProfileHandler(c *gin.Context) {
+	var req UserProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondError(c, http.StatusBadRequest, "INVALID_REQUEST",
+			"请求参数错误", err.Error())
+		return
+	}
+
+	// 获取用户信息
+	result, err := s.xiaohongshuService.UserProfile(c.Request.Context(), req.UserID, req.XsecToken)
+	if err != nil {
+		respondError(c, http.StatusInternalServerError, "GET_USER_PROFILE_FAILED",
+			"获取用户主页失败", err.Error())
+		return
+	}
+
+	c.Set("account", "ai-report")
+	respondSuccess(c, map[string]any{"data": result}, "result.Message")
 }
 
 // postCommentHandler 发表评论到Feed
